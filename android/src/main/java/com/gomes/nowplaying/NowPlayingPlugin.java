@@ -17,6 +17,7 @@ import android.media.MediaMetadata;
 import android.media.session.MediaController;
 import android.media.session.MediaSession;
 import android.media.session.PlaybackState;
+import android.os.Build;
 import android.provider.Settings;
 import android.text.TextUtils;
 import io.flutter.embedding.engine.plugins.activity.ActivityAware;
@@ -103,7 +104,11 @@ public class NowPlayingPlugin implements FlutterPlugin, MethodCallHandler, Activ
     changeBroadcastReceiver = new ChangeBroadcastReceiver();
     IntentFilter intentFilter = new IntentFilter();
     intentFilter.addAction(NowPlayingPlugin.ACTION);
-    context.registerReceiver(changeBroadcastReceiver, intentFilter, Context.RECEIVER_EXPORTED);
+    if (Build.VERSION.SDK_INT >= 33) {
+      context.registerReceiver(changeBroadcastReceiver, intentFilter, Context.RECEIVER_EXPORTED);
+    } else {
+      context.registerReceiver(changeBroadcastReceiver, intentFilter);
+    }
   }
 
   private void detach() {

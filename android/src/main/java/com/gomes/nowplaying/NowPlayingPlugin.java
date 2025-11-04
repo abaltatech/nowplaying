@@ -52,6 +52,9 @@ public class NowPlayingPlugin implements FlutterPlugin, MethodCallHandler, Activ
   private static final int STATE_STOPPED = 2;
   private static final int STATE_UNKNOWN = -1;
 
+  private static final int MAX_SAME_STATE_COUNT = 10;
+  private static final int POLLING_INTERVAL_MS = 500;
+
   /// The MethodChannel that will the communication between Flutter and native
   /// Android
   ///
@@ -159,7 +162,8 @@ public class NowPlayingPlugin implements FlutterPlugin, MethodCallHandler, Activ
   }
 
   /**
-   * Start polling for updates, Stop the previous polling thread
+   * Start polling for updates in between notifications
+   * This is needed to catch playback state changes that do not trigger a new notification
    */
   private void startPolling(MediaSession.Token token, Icon icon) {
     stopPolling();
@@ -172,7 +176,7 @@ public class NowPlayingPlugin implements FlutterPlugin, MethodCallHandler, Activ
           mainHandler.post(() -> sendTrack(data));
           Integer currentState = (Integer) data.get("state");
           if (currentState != null && currentState.equals(lastState)) {
-            if (++sameStateCount >= 10) {
+            if (++sameStateCount >= MAX_SAME_STATE_COUNT) {
               break;
             }
           } else {
@@ -184,7 +188,7 @@ public class NowPlayingPlugin implements FlutterPlugin, MethodCallHandler, Activ
           sameStateCount = 0;
         }
         try {
-          Thread.sleep(500);
+          Thread.sleep(POLLING_INTERVAL_MS);
         } catch (InterruptedException e) {
           break;
         }
